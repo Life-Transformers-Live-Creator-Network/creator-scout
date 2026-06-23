@@ -4,14 +4,15 @@ const HOST = 'tiktok-api23.p.rapidapi.com';
 const SB = 'mfpnlrfipurarjnpkjjf.supabase.co';
 const SK = 'sb_publishable_GIY7xq7siIu7xhhO_VBx1Q_B4jvxetO';
 
-// Broad TikTok live categories
 const KEYWORDS = [
-  'live','gaming','chat','music','dance','fitness','beauty',
-  'cooking','travel','comedy','fashion','sport','art','education'
+  'Fortnite','Minecraft','Roblox','Call of Duty','Warzone',
+  'Apex Legends','League of Legends','NBA 2K','Rocket League',
+  'Overwatch','Elden Ring','Clash of Clans','Brawl Stars',
+  'Genshin Impact','Stumble Guys'
 ];
 
 function get(keyword) {
-  return new Promise((res, rej) => {
+  return new Promise((res) => {
     const path = '/api/live/stream?related_live_tag=' + encodeURIComponent(keyword) + '&load_more=true';
     const r = https.request({
       hostname: HOST, path, method: 'GET',
@@ -36,9 +37,7 @@ function checkExists(username) {
     }, resp => {
       let d = '';
       resp.on('data', c => d += c);
-      resp.on('end', () => {
-        try { res(JSON.parse(d).length > 0); } catch(e) { res(false); }
-      });
+      resp.on('end', () => { try { res(JSON.parse(d).length > 0); } catch(e) { res(false); } });
     });
     r.on('error', () => res(false));
     r.end();
@@ -70,8 +69,8 @@ function save(creator) {
   });
 }
 
-async function run() {
-  console.log('Scanning', new Date().toISOString());
+async function scan() {
+  console.log('\n=== Scanning', new Date().toISOString(), '===');
   let saved = 0, skippedDB = 0, skippedFollowers = 0;
   const seenThisRun = new Set();
 
@@ -86,28 +85,15 @@ async function run() {
         if (!room || !room.owner) continue;
         const o = room.owner;
         const username = o.display_id || o.unique_id;
-        if (!username) continue;
-
-        // Skip if already seen in this run
-        if (seenThisRun.has(username)) continue;
+        if (!username || seenThisRun.has(username)) continue;
         seenThisRun.add(username);
 
-        // Skip if over 250k followers
         const followers = o.follow_info ? o.follow_info.follower_count : 0;
-        if (followers > 250000) {
-          skippedFollowers++;
-          console.log('SKIP (followers ' + followers + '):', username);
-          continue;
-        }
+        if (followers > 250000) { skippedFollowers++; continue; }
 
-        // Skip if already in database
         const exists = await checkExists(username);
-        if (exists) {
-          skippedDB++;
-          continue;
-        }
+        if (exists) { skippedDB++; continue; }
 
-        // Save new creator
         const status = await save({
           username,
           nickname: o.nickname || username,
@@ -120,7 +106,7 @@ async function run() {
 
         if (status === 200 || status === 201) {
           saved++;
-          console.log('SAVED:', username, followers + ' followers');
+          console.log('✅ SAVED:', username, '(' + followers + ' followers)');
         }
       }
     } catch(e) {
@@ -128,10 +114,10 @@ async function run() {
     }
   }
 
-  console.log('---');
-  console.log('Saved:', saved);
-  console.log('Skipped (in DB already):', skippedDB);
-  console.log('Skipped (over 250k):', skippedFollowers);
+  console.log('--- Saved:', saved, '| Skipped DB:', skippedDB, '| Skipped followers:', skippedFollowers);
 }
 
-run();
+// Run immediately then every 30 minutes
+scan();
+setInterval(scan, 30 * 60 * 1000);
+console.log('Auto-scan running every 30 minutes. Press Ctrl+C to stop.');
