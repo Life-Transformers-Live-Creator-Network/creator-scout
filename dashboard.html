@@ -236,9 +236,13 @@ function clearSelection() {
   render();
 }
 
-function copyUsernames() {
+function downloadUsernames() {
   const usernames = Array.from(selected).join('\n');
-  alert('Selected usernames:\n\n' + usernames);
+  const blob = new Blob([usernames], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'creators.txt';
+  a.click();
 }
 
 async function update(username, fields) {
