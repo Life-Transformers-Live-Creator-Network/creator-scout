@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creator Scout — Life Transformers Hub</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f0f1a; color: #fff; font-family: sans-serif; padding: 20px; }
+h1 { color: #a855f7; font-size: 22px; }
+.subtitle { color: #888; font-size: 13px; margin-bottom: 20px; }
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.stat { background: #1a1a2e; border-radius: 10px; padding: 14px; border-left: 3px solid var(--c); }
+.stat-val { font-size: 22px; font-weight: bold; color: var(--c); }
+.stat-label { font-size: 12px; color: #888; }
+.filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+input { flex: 1; min-width: 200px; background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 13px; }
+.btn { background: #1a1a2e; color: #fff; border: 1px solid #333; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px; }
+.btn.active { background: #a855f7; border-color: #a855f7; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 14px; }
+.card { background: #1a1a2e; border-radius: 12px; padding: 16px; border: 1px solid #2a2a3e; }
+.card.saved { border-color: #10b981; }
+.card.eligible { border-color: #f59e0b; }
+.card.recruited { border-color: #ec4899; }
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.nickname { font-weight: bold; font-size: 15px; }
+.username { color: #888; font-size: 12px; }
+.niche-tag { background: #2a1a3e; color: #a855f7; border-radius: 6px; padding: 3px 8px; font-size: 11px; }
+.stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.stat-box { background: #0f0f1a; border-radius: 8px; padding: 8px; text-align: center; }
+.stat-box-val { font-size: 14px; font-weight: bold; }
+.stat-box-label { font-size: 10px; color: #666; }
+.actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.action-btn { color: #fff; border: 1px solid #333; border-radius: 6px; padding: 6px 4px; cursor: pointer; font-size: 11px; background: #0f0f1a; }
+.action-btn.on { border-color: transparent; }
+.tiktok-link { display: block; text-align: center; background: #0f0f1a; color: #a855f7; border-radius: 6px; padding: 6px; font-size: 12px; text-decoration: none; border: 1px solid #2a2a3e; }
+.refresh-btn { background: #a855f7; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+#status { color: #888; font-size: 13px; text-align: center; padding: 40px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🎯 Creator Scout</h1>
+    <p class="subtitle">Life Transformers Hub — UK Market</p>
+  </div>
+  <button class="refresh-btn" onclick="load()">🔄 Refresh</button>
+</div>
+
+<div class="stats">
+  <div class="stat" style="--c:#a855f7"><div class="stat-val" id="s-total">0</div><div class="stat-label">Total Creators</div></div>
+  <div class="stat" style="--c:#10b981"><div class="stat-val" id="s-saved">0</div><div class="stat-label">Saved</div></div>
+  <div class="stat" style="--c:#f59e0b"><div class="stat-val" id="s-eligible">0</div><div class="stat-label">UK Eligible</div></div>
+  <div class="stat" style="--c:#ec4899"><div class="stat-val" id="s-recruited">0</div><div class="stat-label">Recruited</div></div>
+</div>
+
+<div class="filters">
+  <input id="search" placeholder="🔍 Search username or name..." oninput="render()">
+  <button class="btn active" onclick="setFilter('all',this)">All</button>
+  <button class="btn" onclick="setFilter('saved',this)">Saved</button>
+  <button class="btn" onclick="setFilter('eligible',this)">UK Eligible</button>
+  <button class="btn" onclick="setFilter('recruited',this)">Recruited</button>
+</div>
+
+<div id="status">Loading creators...</div>
+<div class="grid" id="grid"></div>
+
+<script>
+const SB = 'https://mfpnlrfipurarjnpkjjf.supabase.co';
+const SK = 'sb_publishable_GIY7xq7siIu7xhhO_VBx1Q_B4jvxetO';
+let creators = [];
+let activeFilter = 'all';
+
+function fmt(n) {
+  if (!n) return '0';
+  if (n >= 1000000) return (n/1000000).toFixed(1)+'M';
+  if (n >= 1000) return (n/1000).toFixed(1)+'K';
+  return n;
+}
+
+function followerColor(n) {
+  if (n > 100000) return '#f59e0b';
+  if (n > 10000) return '#10b981';
+  return '#6366f1';
+}
+
+async function load() {
+  document.getElementById('status').textContent = 'Loading...';
+  document.getElementById('grid').innerHTML = '';
+  const res = await fetch(SB+'/rest/v1/creators?select=*&order=followers.asc', {
+    headers: { apikey: SK, Authorization: 'Bearer '+SK }
+  });
+  creators = await res.json();
+  render();
+}
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function render() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const filtered = creators.filter(c => {
+    const matchSearch = (c.username||'').toLowerCase().includes(search) || (c.nickname||'').toLowerCase().includes(search);
+    const matchFilter = activeFilter === 'all' || c[activeFilter];
+    return matchSearch && matchFilter;
+  });
+
+  document.getElementById('s-total').textContent = creators.length;
+  document.getElementById('s-saved').textContent = creators.filter(c=>c.saved).length;
+  document.getElementById('s-eligible').textContent = creators.filter(c=>c.eligible).length;
+  document.getElementById('s-recruited').textContent = creators.filter(c=>c.recruited).length;
+
+  const grid = document.getElementById('grid');
+  const status = document.getElementById('status');
+
+  if (filtered.length === 0) {
+    status.textContent = 'No creators found';
+    grid.innerHTML = '';
+    return;
+  }
+  status.textContent = '';
+  grid.innerHTML = filtered.map(c => `
+    <div class="card ${c.recruited?'recruited':c.eligible?'eligible':c.saved?'saved':''}">
+      <div class="card-header">
+        <div>
+          <div class="nickname">${c.nickname||c.username}</div>
+          <div class="username">@${c.username}</div>
+        </div>
+        <span class="niche-tag">${c.niche||'—'}</span>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-box-val" style="color:${followerColor(c.followers)}">${fmt(c.followers)}</div>
+          <div class="stat-box-label">Followers</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" style="color:#10b981">${fmt(c.viewers)}</div>
+          <div class="stat-box-label">Viewers</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" style="color:#f59e0b">${fmt(c.likes)}</div>
+          <div class="stat-box-label">Likes</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="action-btn ${c.saved?'on':''}" style="${c.saved?'background:#10b981':''}" onclick="update('${c.username}',{saved:${!c.saved}})">
+          ${c.saved?'✅ Saved':'💾 Save'}
+        </button>
+        <button class="action-btn ${c.eligible?'on':''}" style="${c.eligible?'background:#f59e0b':''}" onclick="update('${c.username}',{eligible:${!c.eligible}})">
+          ${c.eligible?'⭐ UK OK':'🌍 UK?'}
+        </button>
+        <button class="action-btn ${c.recruited?'on':''}" style="${c.recruited?'background:#ec4899':''}" onclick="update('${c.username}',{recruited:${!c.recruited}})">
+          ${c.recruited?'🎉 Done':'📩 Recruit'}
+        </button>
+      </div>
+      <a class="tiktok-link" href="https://www.tiktok.com/@${c.username}" target="_blank">👁 View TikTok Profile</a>
+    </div>
+  `).join('');
+}
+
+async function update(username, fields) {
+  await fetch(SB+'/rest/v1/creators?username=eq.'+username, {
+    method: 'PATCH',
+    headers: { apikey: SK, Authorization: 'Bearer '+SK, 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields)
+  });
+  load();
+}
+
+load();
+</script>
+</body>
+</html>
