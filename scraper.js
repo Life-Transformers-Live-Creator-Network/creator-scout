@@ -4,48 +4,40 @@ const HOST = 'tiktok-api23.p.rapidapi.com';
 const SB = 'mfpnlrfipurarjnpkjjf.supabase.co';
 const SK = 'sb_publishable_GIY7xq7siIu7xhhO_VBx1Q_B4jvxetO';
 
-const NICHES = [
-  'Fortnite','Minecraft','Roblox','Just Chatting','Music','Beauty','Fitness',
-  'Cooking','Daily Life','Talk Show','Gaming','Dance','Comedy','Fashion',
-  'Sports','Travel','Art','Animals','Food','DIY','Education','News',
-  'Crypto','Cars','Makeup','Hair','Nails','Singing','Guitar','Piano',
-  'Football','Basketball','Boxing','MMA','Yoga','Meditation','Reading',
-  'Drawing','Photography','Vlog','Chatting','ASMR','Karaoke','Podcast'
+// Broad TikTok live categories
+const KEYWORDS = [
+  'live','gaming','chat','music','dance','fitness','beauty',
+  'cooking','travel','comedy','fashion','sport','art','education'
 ];
 
-function get(niche) {
+function get(keyword) {
   return new Promise((res, rej) => {
-    const path = '/api/live/stream?related_live_tag=' + encodeURIComponent(niche) + '&load_more=true';
-    const opts = {
+    const path = '/api/live/stream?related_live_tag=' + encodeURIComponent(keyword) + '&load_more=true';
+    const r = https.request({
       hostname: HOST, path, method: 'GET',
       headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': HOST }
-    };
-    const r = https.request(opts, resp => {
+    }, resp => {
       let d = '';
       resp.on('data', c => d += c);
-      resp.on('end', () => { try { res(JSON.parse(d)); } catch(e) { rej(e); } });
+      resp.on('end', () => { try { res(JSON.parse(d)); } catch(e) { res({}); } });
     });
-    r.on('error', rej);
+    r.on('error', () => res({}));
     r.end();
   });
 }
 
 function checkExists(username) {
-  return new Promise((res, rej) => {
-    const opts = {
+  return new Promise((res) => {
+    const r = https.request({
       hostname: SB,
-      path: '/rest/v1/creators?username=eq.' + username + '&select=username',
+      path: '/rest/v1/creators?username=eq.' + encodeURIComponent(username) + '&select=username',
       method: 'GET',
       headers: { 'apikey': SK, 'Authorization': 'Bearer ' + SK }
-    };
-    const r = https.request(opts, resp => {
+    }, resp => {
       let d = '';
       resp.on('data', c => d += c);
       resp.on('end', () => {
-        try {
-          const rows = JSON.parse(d);
-          res(rows.length > 0);
-        } catch(e) { res(false); }
+        try { res(JSON.parse(d).length > 0); } catch(e) { res(false); }
       });
     });
     r.on('error', () => res(false));
@@ -54,9 +46,9 @@ function checkExists(username) {
 }
 
 function save(creator) {
-  return new Promise((res, rej) => {
+  return new Promise((res) => {
     const body = JSON.stringify(creator);
-    const opts = {
+    const r = https.request({
       hostname: SB,
       path: '/rest/v1/creators',
       method: 'POST',
@@ -67,13 +59,12 @@ function save(creator) {
         'Prefer': 'resolution=merge-duplicates',
         'Content-Length': Buffer.byteLength(body)
       }
-    };
-    const r = https.request(opts, resp => {
+    }, resp => {
       let d = '';
       resp.on('data', c => d += c);
       resp.on('end', () => res(resp.statusCode));
     });
-    r.on('error', rej);
+    r.on('error', () => res(0));
     r.write(body);
     r.end();
   });
@@ -81,15 +72,14 @@ function save(creator) {
 
 async function run() {
   console.log('Scanning', new Date().toISOString());
-  let saved = 0;
-  let skippedExisting = 0;
-  let skippedFollowers = 0;
+  let saved = 0, skippedDB = 0, skippedFollowers = 0;
+  const seenThisRun = new Set();
 
-  for (const niche of NICHES) {
+  for (const keyword of KEYWORDS) {
     try {
-      const json = await get(niche);
+      const json = await get(keyword);
       const streams = json.data || [];
-      console.log(niche + ': ' + streams.length + ' streams');
+      console.log(keyword + ': ' + streams.length + ' streams');
 
       for (const s of streams) {
         const room = s.data;
@@ -98,37 +88,50 @@ async function run() {
         const username = o.display_id || o.unique_id;
         if (!username) continue;
 
+        // Skip if already seen in this run
+        if (seenThisRun.has(username)) continue;
+        seenThisRun.add(username);
+
+        // Skip if over 250k followers
         const followers = o.follow_info ? o.follow_info.follower_count : 0;
-        if (followers > 250000) { skippedFollowers++; continue; }
+        if (followers > 250000) {
+          skippedFollowers++;
+          console.log('SKIP (followers ' + followers + '):', username);
+          continue;
+        }
 
+        // Skip if already in database
         const exists = await checkExists(username);
-        if (exists) { skippedExisting++; continue; }
+        if (exists) {
+          skippedDB++;
+          continue;
+        }
 
-        const creator = {
+        // Save new creator
+        const status = await save({
           username,
           nickname: o.nickname || username,
           followers,
           viewers: room.user_count || 0,
           likes: room.like_count || 0,
-          niche,
+          niche: keyword,
           last_seen: new Date().toISOString()
-        };
+        });
 
-        const status = await save(creator);
         if (status === 200 || status === 201) {
           saved++;
-          console.log('✅ Saved:', username, '(' + followers + ' followers)');
+          console.log('SAVED:', username, followers + ' followers');
         }
       }
     } catch(e) {
-      console.log('Error for ' + niche + ':', e.message);
+      console.log('Error for ' + keyword + ':', e.message);
     }
   }
 
   console.log('---');
-  console.log('Done. Saved:', saved);
-  console.log('Skipped (already in DB):', skippedExisting);
-  console.log('Skipped (too many followers):', skippedFollowers);
+  console.log('Saved:', saved);
+  console.log('Skipped (in DB already):', skippedDB);
+  console.log('Skipped (over 250k):', skippedFollowers);
 }
 
 run();
