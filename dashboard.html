@@ -238,11 +238,23 @@ function clearSelection() {
 
 function copyUsernames() {
   const usernames = Array.from(selected).join('\n');
-  navigator.clipboard.writeText(usernames).then(() => {
+  const el = document.createElement('textarea');
+  el.value = usernames;
+  el.style.position = 'fixed';
+  el.style.top = '0';
+  el.style.left = '0';
+  document.body.appendChild(el);
+  el.focus();
+  el.select();
+  try {
+    document.execCommand('copy');
     const msg = document.getElementById('copied-msg');
     msg.style.display = 'inline';
     setTimeout(() => msg.style.display = 'none', 2000);
-  });
+  } catch(e) {
+    prompt('Copy these usernames:', usernames);
+  }
+  document.body.removeChild(el);
 }
 
 async function update(username, fields) {
