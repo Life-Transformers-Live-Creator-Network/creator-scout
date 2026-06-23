@@ -126,7 +126,7 @@ function followerColor(n) {
 async function load() {
   document.getElementById('status').textContent = 'Loading...';
   document.getElementById('list').innerHTML = '';
-  const res = await fetch(SB+'/rest/v1/creators?select=*&order=followers.asc', {
+ const res = await fetch(SB+'/rest/v1/creators?select=*&order=viewers.desc', {
     headers: { apikey: SK, Authorization: 'Bearer '+SK }
   });
   creators = await res.json();
