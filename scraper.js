@@ -72,10 +72,15 @@ async function run() {
         const o = room.owner;
         const username = o.display_id || o.unique_id;
         if (!username) continue;
+        const followers = o.follow_info ? o.follow_info.follower_count : 0;
+        if (followers > 250000) {
+          console.log('Skipping ' + username + ' - too many followers: ' + followers);
+          continue;
+        }
         const creator = {
           username: username,
           nickname: o.nickname || username,
-          followers: o.follow_info ? o.follow_info.follower_count : 0,
+          followers: followers,
           viewers: room.user_count || 0,
           likes: room.like_count || 0,
           niche: n,
