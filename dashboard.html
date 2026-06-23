@@ -238,15 +238,8 @@ function clearSelection() {
 
 function copyUsernames() {
   const usernames = Array.from(selected).join('\n');
-  const el = document.createElement('textarea');
-  el.value = usernames;
-  el.style.position = 'fixed';
-  el.style.top = '0';
-  el.style.left = '0';
-  document.body.appendChild(el);
-  el.focus();
-  el.select();
-  try {
+  alert('YOUR SELECTED USERNAMES:\n\n' + usernames + '\n\nPress Ctrl+A to select all, then Ctrl+C to copy!');
+}
     document.execCommand('copy');
     const msg = document.getElementById('copied-msg');
     msg.style.display = 'inline';
