@@ -6,37 +6,47 @@
 <title>Creator Scout — Life Transformers Hub</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #0f0f1a; color: #fff; font-family: sans-serif; padding: 20px; }
+body { background: #0f0f1a; color: #fff; font-family: sans-serif; padding: 20px; max-width: 900px; margin: 0 auto; }
 h1 { color: #a855f7; font-size: 22px; }
 .subtitle { color: #888; font-size: 13px; margin-bottom: 20px; }
-.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
-.stat { background: #1a1a2e; border-radius: 10px; padding: 14px; border-left: 3px solid var(--c); }
-.stat-val { font-size: 22px; font-weight: bold; color: var(--c); }
-.stat-label { font-size: 12px; color: #888; }
-.filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-input { flex: 1; min-width: 200px; background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 13px; }
-.btn { background: #1a1a2e; color: #fff; border: 1px solid #333; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+.stat { background: #1a1a2e; border-radius: 10px; padding: 12px; border-left: 3px solid var(--c); }
+.stat-val { font-size: 20px; font-weight: bold; color: var(--c); }
+.stat-label { font-size: 11px; color: #888; }
+.filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+input[type=text] { flex: 1; min-width: 180px; background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 13px; }
+.btn { background: #1a1a2e; color: #fff; border: 1px solid #333; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 12px; }
 .btn.active { background: #a855f7; border-color: #a855f7; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 14px; }
-.card { background: #1a1a2e; border-radius: 12px; padding: 16px; border: 1px solid #2a2a3e; }
-.card.saved { border-color: #10b981; }
-.card.eligible { border-color: #f59e0b; }
-.card.recruited { border-color: #ec4899; }
-.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-.nickname { font-weight: bold; font-size: 15px; }
-.username { color: #888; font-size: 12px; }
-.niche-tag { background: #2a1a3e; color: #a855f7; border-radius: 6px; padding: 3px 8px; font-size: 11px; }
-.stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.stat-box { background: #0f0f1a; border-radius: 8px; padding: 8px; text-align: center; }
-.stat-box-val { font-size: 14px; font-weight: bold; }
-.stat-box-label { font-size: 10px; color: #666; }
-.actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
-.action-btn { color: #fff; border: 1px solid #333; border-radius: 6px; padding: 6px 4px; cursor: pointer; font-size: 11px; background: #0f0f1a; }
-.action-btn.on { border-color: transparent; }
-.tiktok-link { display: block; text-align: center; background: #0f0f1a; color: #a855f7; border-radius: 6px; padding: 6px; font-size: 12px; text-decoration: none; border: 1px solid #2a2a3e; }
 .refresh-btn { background: #a855f7; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+
+/* Selection bar */
+.selection-bar { background: #1a1a2e; border: 1px solid #a855f7; border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; display: none; align-items: center; gap: 10px; flex-wrap: wrap; }
+.selection-bar.visible { display: flex; }
+.selection-count { color: #a855f7; font-weight: bold; font-size: 13px; }
+.copy-btn { background: #a855f7; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 12px; }
+.copy-btn:hover { background: #9333ea; }
+.clear-btn { background: #333; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 12px; }
+.copied-msg { color: #10b981; font-size: 12px; display: none; }
+
+/* Table */
+.table-header { display: grid; grid-template-columns: 36px 1fr 120px 90px 80px 80px 80px 180px; gap: 8px; padding: 8px 12px; color: #666; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #2a2a3e; }
+.creator-row { display: grid; grid-template-columns: 36px 1fr 120px 90px 80px 80px 80px 180px; gap: 8px; padding: 12px; background: #1a1a2e; border-radius: 8px; margin-bottom: 6px; align-items: center; border: 1px solid #2a2a3e; transition: border-color 0.2s; }
+.creator-row.selected { border-color: #a855f7; background: #1e1a2e; }
+.creator-row.saved { border-left: 3px solid #10b981; }
+.creator-row.eligible { border-left: 3px solid #f59e0b; }
+.creator-row.recruited { border-left: 3px solid #ec4899; }
+.creator-name { font-weight: bold; font-size: 13px; }
+.creator-username { color: #888; font-size: 11px; }
+.niche-tag { background: #2a1a3e; color: #a855f7; border-radius: 5px; padding: 2px 7px; font-size: 11px; display: inline-block; }
+.stat-cell { font-size: 13px; font-weight: bold; }
+.action-btn { color: #fff; border: 1px solid #333; border-radius: 6px; padding: 5px 8px; cursor: pointer; font-size: 11px; background: #0f0f1a; width: 100%; margin-bottom: 3px; }
+.action-btn.on { border-color: transparent; }
+.tiktok-link { color: #a855f7; font-size: 11px; text-decoration: none; display: block; margin-top: 2px; }
+.tiktok-link:hover { text-decoration: underline; }
+input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: #a855f7; }
 #status { color: #888; font-size: 13px; text-align: center; padding: 40px; }
+.select-all-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #888; font-size: 12px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -57,20 +67,47 @@ input { flex: 1; min-width: 200px; background: #1a1a2e; border: 1px solid #333; 
 </div>
 
 <div class="filters">
-  <input id="search" placeholder="🔍 Search username or name..." oninput="render()">
+  <input type="text" id="search" placeholder="🔍 Search username or name..." oninput="render()">
   <button class="btn active" onclick="setFilter('all',this)">All</button>
   <button class="btn" onclick="setFilter('saved',this)">Saved</button>
   <button class="btn" onclick="setFilter('eligible',this)">UK Eligible</button>
   <button class="btn" onclick="setFilter('recruited',this)">Recruited</button>
 </div>
 
+<!-- Selection Bar -->
+<div class="selection-bar" id="selection-bar">
+  <span class="selection-count" id="sel-count">0 selected</span>
+  <button class="copy-btn" onclick="copyUsernames()">📋 Copy Usernames</button>
+  <button class="clear-btn" onclick="clearSelection()">✕ Clear</button>
+  <span class="copied-msg" id="copied-msg">✅ Copied to clipboard!</span>
+</div>
+
+<!-- Select All -->
+<div class="select-all-row" onclick="toggleSelectAll()">
+  <input type="checkbox" id="select-all">
+  <span>Select all visible</span>
+</div>
+
+<!-- Table Header -->
+<div class="table-header">
+  <div></div>
+  <div>Creator</div>
+  <div>Niche</div>
+  <div>Followers</div>
+  <div>Viewers</div>
+  <div>Likes</div>
+  <div>Actions</div>
+  <div>TikTok</div>
+</div>
+
 <div id="status">Loading creators...</div>
-<div class="grid" id="grid"></div>
+<div id="list"></div>
 
 <script>
 const SB = 'https://mfpnlrfipurarjnpkjjf.supabase.co';
 const SK = 'sb_publishable_GIY7xq7siIu7xhhO_VBx1Q_B4jvxetO';
 let creators = [];
+let selected = new Set();
 let activeFilter = 'all';
 
 function fmt(n) {
@@ -88,11 +125,13 @@ function followerColor(n) {
 
 async function load() {
   document.getElementById('status').textContent = 'Loading...';
-  document.getElementById('grid').innerHTML = '';
+  document.getElementById('list').innerHTML = '';
   const res = await fetch(SB+'/rest/v1/creators?select=*&order=followers.asc', {
     headers: { apikey: SK, Authorization: 'Bearer '+SK }
   });
   creators = await res.json();
+  selected.clear();
+  updateSelectionBar();
   render();
 }
 
@@ -103,52 +142,45 @@ function setFilter(f, btn) {
   render();
 }
 
-function render() {
+function getFiltered() {
   const search = document.getElementById('search').value.toLowerCase();
-  const filtered = creators.filter(c => {
+  return creators.filter(c => {
     const matchSearch = (c.username||'').toLowerCase().includes(search) || (c.nickname||'').toLowerCase().includes(search);
     const matchFilter = activeFilter === 'all' || c[activeFilter];
     return matchSearch && matchFilter;
   });
+}
+
+function render() {
+  const filtered = getFiltered();
 
   document.getElementById('s-total').textContent = creators.length;
   document.getElementById('s-saved').textContent = creators.filter(c=>c.saved).length;
   document.getElementById('s-eligible').textContent = creators.filter(c=>c.eligible).length;
   document.getElementById('s-recruited').textContent = creators.filter(c=>c.recruited).length;
 
-  const grid = document.getElementById('grid');
+  const list = document.getElementById('list');
   const status = document.getElementById('status');
 
   if (filtered.length === 0) {
     status.textContent = 'No creators found';
-    grid.innerHTML = '';
+    list.innerHTML = '';
     return;
   }
   status.textContent = '';
-  grid.innerHTML = filtered.map(c => `
-    <div class="card ${c.recruited?'recruited':c.eligible?'eligible':c.saved?'saved':''}">
-      <div class="card-header">
-        <div>
-          <div class="nickname">${c.nickname||c.username}</div>
-          <div class="username">@${c.username}</div>
-        </div>
-        <span class="niche-tag">${c.niche||'—'}</span>
+
+  list.innerHTML = filtered.map(c => `
+    <div class="creator-row ${selected.has(c.username)?'selected':''} ${c.recruited?'recruited':c.eligible?'eligible':c.saved?'saved':''}" id="row-${c.username}">
+      <input type="checkbox" ${selected.has(c.username)?'checked':''} onchange="toggleSelect('${c.username}',this.checked)">
+      <div>
+        <div class="creator-name">${c.nickname||c.username}</div>
+        <div class="creator-username">@${c.username}</div>
       </div>
-      <div class="stats-row">
-        <div class="stat-box">
-          <div class="stat-box-val" style="color:${followerColor(c.followers)}">${fmt(c.followers)}</div>
-          <div class="stat-box-label">Followers</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-box-val" style="color:#10b981">${fmt(c.viewers)}</div>
-          <div class="stat-box-label">Viewers</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-box-val" style="color:#f59e0b">${fmt(c.likes)}</div>
-          <div class="stat-box-label">Likes</div>
-        </div>
-      </div>
-      <div class="actions">
+      <div><span class="niche-tag">${c.niche||'—'}</span></div>
+      <div class="stat-cell" style="color:${followerColor(c.followers)}">${fmt(c.followers)}</div>
+      <div class="stat-cell" style="color:#10b981">${fmt(c.viewers)}</div>
+      <div class="stat-cell" style="color:#f59e0b">${fmt(c.likes)}</div>
+      <div>
         <button class="action-btn ${c.saved?'on':''}" style="${c.saved?'background:#10b981':''}" onclick="update('${c.username}',{saved:${!c.saved}})">
           ${c.saved?'✅ Saved':'💾 Save'}
         </button>
@@ -156,12 +188,61 @@ function render() {
           ${c.eligible?'⭐ UK OK':'🌍 UK?'}
         </button>
         <button class="action-btn ${c.recruited?'on':''}" style="${c.recruited?'background:#ec4899':''}" onclick="update('${c.username}',{recruited:${!c.recruited}})">
-          ${c.recruited?'🎉 Done':'📩 Recruit'}
+          ${c.recruited?'🎉 Recruited':'📩 Recruit'}
         </button>
       </div>
-      <a class="tiktok-link" href="https://www.tiktok.com/@${c.username}" target="_blank">👁 View TikTok Profile</a>
+      <div>
+        <a class="tiktok-link" href="https://www.tiktok.com/@${c.username}" target="_blank">👁 View Profile</a>
+      </div>
     </div>
   `).join('');
+}
+
+function toggleSelect(username, checked) {
+  if (checked) selected.add(username);
+  else selected.delete(username);
+  const row = document.getElementById('row-'+username);
+  if (row) row.classList.toggle('selected', checked);
+  updateSelectionBar();
+}
+
+function toggleSelectAll() {
+  const filtered = getFiltered();
+  const allSelected = filtered.every(c => selected.has(c.username));
+  filtered.forEach(c => {
+    if (allSelected) selected.delete(c.username);
+    else selected.add(c.username);
+  });
+  document.getElementById('select-all').checked = !allSelected;
+  render();
+  updateSelectionBar();
+}
+
+function updateSelectionBar() {
+  const bar = document.getElementById('selection-bar');
+  const count = document.getElementById('sel-count');
+  if (selected.size > 0) {
+    bar.classList.add('visible');
+    count.textContent = selected.size + ' selected';
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function clearSelection() {
+  selected.clear();
+  document.getElementById('select-all').checked = false;
+  updateSelectionBar();
+  render();
+}
+
+function copyUsernames() {
+  const usernames = Array.from(selected).join('\n');
+  navigator.clipboard.writeText(usernames).then(() => {
+    const msg = document.getElementById('copied-msg');
+    msg.style.display = 'inline';
+    setTimeout(() => msg.style.display = 'none', 2000);
+  });
 }
 
 async function update(username, fields) {
