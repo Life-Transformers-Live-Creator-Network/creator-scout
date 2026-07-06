@@ -104,8 +104,8 @@ input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color:
 <div id="list"></div>
 
 <script>
-const SB = 'https://mfpnlrfipurarjnpkjjf.supabase.co';
-const SK = 'sb_publishable_GIY7xq7siIu7xhhO_VBx1Q_B4jvxetO';
+const WORKER_URL = 'https://creator-scout-api.splight333.workers.dev';
+const DASHBOARD_KEY = 'Gately08court@?';
 let creators = [];
 let selected = new Set();
 let activeFilter = 'all';
@@ -126,9 +126,7 @@ function followerColor(n) {
 async function load() {
   document.getElementById('status').textContent = 'Loading...';
   document.getElementById('list').innerHTML = '';
-  const res = await fetch(SB+'/rest/v1/creators?select=*&order=viewers.desc', {
-    headers: { apikey: SK, Authorization: 'Bearer '+SK }
-  });
+  const res = await fetch(WORKER_URL + '?key=' + DASHBOARD_KEY);
   creators = await res.json();
   selected.clear();
   updateSelectionBar();
